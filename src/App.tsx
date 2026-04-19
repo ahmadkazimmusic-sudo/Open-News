@@ -69,17 +69,17 @@ async function fetchWebContext(query: string): Promise<{ contextBlock: string; s
 }
 
 const LogoIcon = () => (
-  <svg 
-    width="48" 
-    height="48" 
-    viewBox="0 0 24 24" 
-    fill="none" 
+  <svg
+    width="48"
+    height="48"
+    viewBox="0 0 24 24"
+    fill="none"
     xmlns="http://www.w3.org/2000/svg"
     className="brand-logo"
   >
     <circle cx="12" cy="12" r="9" stroke="url(#logo-grad)" strokeWidth="2" strokeDasharray="4 2 8 2" strokeLinecap="round" />
     <circle cx="12" cy="12" r="5" stroke="var(--barrier)" strokeWidth="1.5" strokeDasharray="10 12" className="spin-slow" />
-    <path d="M12 2C16 2 19 6 19 12C19 18 16 22 12 22C8 22 5 18 5 12C5 6 8 2 12 2Z" stroke="url(#logo-grad)" strokeWidth="1" opacity="0.6"/>
+    <path d="M12 2C16 2 19 6 19 12C19 18 16 22 12 22C8 22 5 18 5 12C5 6 8 2 12 2Z" stroke="url(#logo-grad)" strokeWidth="1" opacity="0.6" />
     <defs>
       <linearGradient id="logo-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
         <stop stopColor="#ff7a18" />
@@ -111,15 +111,15 @@ function App() {
   const [loadingPhase, setLoadingPhase] = useState<'web' | 'thinking' | 'responding' | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [copiedId, setCopiedId] = useState<string | null>(null)
-  
+
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
   const [language, setLanguage] = useState('English')
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [sessionId, setSessionId] = useState<string>(`sess-${Date.now()}`)
   const [history, setHistory] = useState<HistorySession[]>([])
-  
+
   const [streamingText, setStreamingText] = useState('')
-  const [streamingSources, setStreamingSources] = useState<{title: string, url: string}[] | null>(null)
+  const [streamingSources, setStreamingSources] = useState<{ title: string, url: string }[] | null>(null)
 
   const chatbarRef = useRef<HTMLDivElement>(null)
   const bottomAnchorRef = useRef<HTMLDivElement>(null)
@@ -143,7 +143,7 @@ function App() {
       const existingIdx = prev.findIndex(s => s.id === sessionId);
       const title = messages.find(m => m.role === 'user')?.text || 'New Chat';
       const newSession: HistorySession = { id: sessionId, title, updatedAt: Date.now(), messages };
-      
+
       let updated = [...prev];
       if (existingIdx >= 0) {
         updated[existingIdx] = newSession;
@@ -208,7 +208,7 @@ function App() {
 
   const runSearch = async (event?: FormEvent<HTMLFormElement>, queryOverride?: string) => {
     if (event) event.preventDefault()
-    
+
     // Set query state immediately if driven by a chip click
     if (queryOverride) {
       setQuery(queryOverride)
@@ -336,22 +336,22 @@ ${fullText}`;
           max_tokens: 350,
           messages: [{ role: 'user', content: metadataPrompt }],
         });
-        
+
         const jsonContent = metaCompletion.choices[0]?.message?.content || '{}';
         const match = jsonContent.match(/\{[\s\S]*\}/); // extract json object
         const meta = JSON.parse(match ? match[0] : jsonContent);
-        
-        setMessages(currentMessages => currentMessages.map(msg => 
-           msg.id === assistantId ? { 
-             ...msg, 
-             followUps: meta.followUps?.slice(0, 3) || [],
-             sentiment: meta.sentiment,
-             bias: meta.bias,
-             chartData: meta.chartData
-           } : msg
+
+        setMessages(currentMessages => currentMessages.map(msg =>
+          msg.id === assistantId ? {
+            ...msg,
+            followUps: meta.followUps?.slice(0, 3) || [],
+            sentiment: meta.sentiment,
+            bias: meta.bias,
+            chartData: meta.chartData
+          } : msg
         ));
       } catch (e) {
-         console.warn("Failed to parse metadata", e);
+        console.warn("Failed to parse metadata", e);
       }
     } catch (error: any) {
       console.error('Error:', error);
@@ -360,7 +360,7 @@ ${fullText}`;
         {
           id: `assistant-${Date.now()}`,
           role: 'assistant',
-          text: error.status === 401 
+          text: error.status === 401
             ? `## ⚠️ Authentication Error\n\nYour AI service token (Hugging Face) appears to have expired or is invalid. Please update the \`VITE_HF_TOKEN\` in your \`.env\` file with a fresh token from your Hugging Face settings.\n\nError details: ${error.message}`
             : `Error communicating with the AI service: ${error.message}`
         }
@@ -387,9 +387,9 @@ ${fullText}`;
           <p>AI-powered search engine for trusted global news sources.</p>
         </div>
         <div className="brand-actions">
-          <select 
-            className="language-selector" 
-            value={language} 
+          <select
+            className="language-selector"
+            value={language}
             onChange={(e) => setLanguage(e.target.value)}
             aria-label="Language"
           >
@@ -400,16 +400,16 @@ ${fullText}`;
             <option value="Japanese">JA</option>
             <option value="Arabic">AR</option>
           </select>
-          <button 
-            className="icon-btn" 
+          <button
+            className="icon-btn"
             onClick={() => setIsSidebarOpen(true)}
             aria-label="History"
             title="History"
           >
             ☰
           </button>
-          <button 
-            className="theme-toggle" 
+          <button
+            className="theme-toggle"
             onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
             aria-label="Toggle theme"
             title="Toggle theme"
@@ -434,7 +434,7 @@ ${fullText}`;
           </button>
         </div>
       </header>
-      
+
       {/* Sidebar Overlay */}
       <div className={`sidebar-overlay ${isSidebarOpen ? 'open' : ''}`} onClick={() => setIsSidebarOpen(false)}></div>
       <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
@@ -449,9 +449,9 @@ ${fullText}`;
           {history.length === 0 ? (
             <p className="empty-history">No past briefs yet.</p>
           ) : (
-            history.sort((a,b) => b.updatedAt - a.updatedAt).map(session => (
-              <div 
-                key={session.id} 
+            history.sort((a, b) => b.updatedAt - a.updatedAt).map(session => (
+              <div
+                key={session.id}
                 className={`history-item ${session.id === sessionId ? 'active' : ''}`}
                 onClick={() => loadSession(session.id)}
               >
@@ -461,8 +461,8 @@ ${fullText}`;
                     {new Date(session.updatedAt).toLocaleDateString()}
                   </span>
                 </div>
-                <button 
-                  className="history-delete-btn" 
+                <button
+                  className="history-delete-btn"
                   onClick={(e) => deleteSession(e, session.id)}
                   aria-label="Delete chat"
                   title="Delete chat"
@@ -575,34 +575,34 @@ ${fullText}`;
                         <AreaChart data={message.chartData.data} margin={{ top: 20, right: 10, bottom: 0, left: 0 }}>
                           <defs>
                             <linearGradient id="chart-grad" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#ff7a18" stopOpacity={0.3}/>
-                              <stop offset="95%" stopColor="#ff7a18" stopOpacity={0}/>
+                              <stop offset="5%" stopColor="#ff7a18" stopOpacity={0.3} />
+                              <stop offset="95%" stopColor="#ff7a18" stopOpacity={0} />
                             </linearGradient>
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
-                          <XAxis 
-                            dataKey="label" 
-                            stroke="rgba(255,255,255,0.2)" 
-                            fontSize={10} 
-                            tickLine={false} 
+                          <XAxis
+                            dataKey="label"
+                            stroke="rgba(255,255,255,0.2)"
+                            fontSize={10}
+                            tickLine={false}
                             axisLine={false}
                             dy={10}
                           />
-                          <YAxis 
-                            stroke="rgba(255,255,255,0.2)" 
-                            fontSize={10} 
-                            tickLine={false} 
+                          <YAxis
+                            stroke="rgba(255,255,255,0.2)"
+                            fontSize={10}
+                            tickLine={false}
                             axisLine={false}
                             dx={-10}
                           />
                           <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }} />
-                          <Area 
-                            type="monotone" 
-                            dataKey="value" 
-                            stroke="#ff7a18" 
+                          <Area
+                            type="monotone"
+                            dataKey="value"
+                            stroke="#ff7a18"
                             strokeWidth={3}
-                            fillOpacity={1} 
-                            fill="url(#chart-grad)" 
+                            fillOpacity={1}
+                            fill="url(#chart-grad)"
                             animationDuration={1500}
                           />
                         </AreaChart>
@@ -610,7 +610,7 @@ ${fullText}`;
                     </div>
                   </div>
                 )}
-                
+
                 {(message.sentiment !== undefined || message.bias) && (
                   <div className="metadata-row">
                     {message.sentiment !== undefined && (
@@ -626,11 +626,11 @@ ${fullText}`;
                         <span className="meta-label">Bias Rating: <strong>{message.bias}</strong></span>
                         <div className="bias-spectrum">
                           <div className="bias-track"></div>
-                          <div 
+                          <div
                             className={`bias-marker ${message.bias.toLowerCase()}`}
-                            style={{ 
-                              left: message.bias === 'Left' ? '15%' : 
-                                    message.bias === 'Right' ? '85%' : '50%'
+                            style={{
+                              left: message.bias === 'Left' ? '15%' :
+                                message.bias === 'Right' ? '85%' : '50%'
                             }}
                           ></div>
                           <div className="bias-labels">
@@ -647,8 +647,8 @@ ${fullText}`;
                 {message.followUps && message.followUps.length > 0 && (
                   <div className="follow-ups">
                     {message.followUps.map((q, i) => (
-                      <button 
-                        key={i} 
+                      <button
+                        key={i}
                         className="follow-up-chip"
                         onClick={() => runSearch(undefined, q)}
                       >

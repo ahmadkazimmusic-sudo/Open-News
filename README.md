@@ -3,7 +3,8 @@
 Open News is a premium, open-source AI search engine designed to transform how we consume global news. By leveraging advanced analytical AI and real-time web context, it delivers deep-dive, structured reports that go beyond surface-level headlines.
 
 ![Open News Interface Preview](https://github.com/ahmadkazimmusic-sudo/Open-News/raw/main/public/preview.png)
-*(Note: Replace with actual screenshot after deployment)*
+
+**Live Demo**: [0pennews.vercel.app](https://0pennews.vercel.app)
 
 ## ✨ Key Features
 
