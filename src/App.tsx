@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import type { FormEvent } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { OpenAI } from 'openai'
-import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from 'recharts'
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { toPng } from 'html-to-image'
 import { Camera } from 'lucide-react'
 import './App.css'
@@ -88,6 +88,21 @@ const LogoIcon = () => (
     </defs>
   </svg>
 )
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="custom-tooltip">
+        <p className="tooltip-label">{label}</p>
+        <p className="tooltip-value">
+          <span className="tooltip-dot"></span>
+          {payload[0].value}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
 
 function App() {
   const [query, setQuery] = useState('')
@@ -345,7 +360,9 @@ ${fullText}`;
         {
           id: `assistant-${Date.now()}`,
           role: 'assistant',
-          text: `Error communicating with the AI service: ${error.message}`
+          text: error.status === 401 
+            ? `## ⚠️ Authentication Error\n\nYour AI service token (Hugging Face) appears to have expired or is invalid. Please update the \`VITE_HF_TOKEN\` in your \`.env\` file with a fresh token from your Hugging Face settings.\n\nError details: ${error.message}`
+            : `Error communicating with the AI service: ${error.message}`
         }
       ]);
     } finally {
@@ -549,15 +566,46 @@ ${fullText}`;
                 )}
 
                 {message.chartData && message.chartData.data && message.chartData.data.length > 0 && (
-                  <div className="message-chart">
-                    <h4>{message.chartData.title}</h4>
-                    <div style={{ height: 200, width: '100%' }}>
-                      <ResponsiveContainer>
-                        <BarChart data={message.chartData.data} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
-                          <XAxis dataKey="label" stroke="#888" fontSize={12} tickLine={false} axisLine={false} />
-                          <Tooltip cursor={{fill: 'rgba(255,255,255,0.05)'}} contentStyle={{ backgroundColor: 'var(--panel-bg)', border: 'none', borderRadius: '8px', color: 'var(--accent-white)' }} />
-                          <Bar dataKey="value" fill="url(#logo-grad)" radius={[4,4,0,0]} />
-                        </BarChart>
+                  <div className="message-chart-container">
+                    <div className="message-chart-header">
+                      <h4>{message.chartData.title}</h4>
+                    </div>
+                    <div className="message-chart-content">
+                      <ResponsiveContainer width="100%" height={220}>
+                        <AreaChart data={message.chartData.data} margin={{ top: 20, right: 10, bottom: 0, left: 0 }}>
+                          <defs>
+                            <linearGradient id="chart-grad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#ff7a18" stopOpacity={0.3}/>
+                              <stop offset="95%" stopColor="#ff7a18" stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
+                          <XAxis 
+                            dataKey="label" 
+                            stroke="rgba(255,255,255,0.2)" 
+                            fontSize={10} 
+                            tickLine={false} 
+                            axisLine={false}
+                            dy={10}
+                          />
+                          <YAxis 
+                            stroke="rgba(255,255,255,0.2)" 
+                            fontSize={10} 
+                            tickLine={false} 
+                            axisLine={false}
+                            dx={-10}
+                          />
+                          <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }} />
+                          <Area 
+                            type="monotone" 
+                            dataKey="value" 
+                            stroke="#ff7a18" 
+                            strokeWidth={3}
+                            fillOpacity={1} 
+                            fill="url(#chart-grad)" 
+                            animationDuration={1500}
+                          />
+                        </AreaChart>
                       </ResponsiveContainer>
                     </div>
                   </div>
@@ -574,9 +622,23 @@ ${fullText}`;
                       </div>
                     )}
                     {message.bias && (
-                      <div className="bias-badge">
-                        <span className="meta-label">Bias Rating</span>
-                        <span className="badge">{message.bias}</span>
+                      <div className="bias-meter-container">
+                        <span className="meta-label">Bias Rating: <strong>{message.bias}</strong></span>
+                        <div className="bias-spectrum">
+                          <div className="bias-track"></div>
+                          <div 
+                            className={`bias-marker ${message.bias.toLowerCase()}`}
+                            style={{ 
+                              left: message.bias === 'Left' ? '15%' : 
+                                    message.bias === 'Right' ? '85%' : '50%'
+                            }}
+                          ></div>
+                          <div className="bias-labels">
+                            <span>Left</span>
+                            <span>Center</span>
+                            <span>Right</span>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
