@@ -15,7 +15,7 @@
 .app-shell.conversation-mode {
   width: min(1080px, 100%);
   align-content: stretch;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto auto 1fr;
   justify-items: stretch;
   padding: 20px 20px 16px;
   gap: 14px;
@@ -974,6 +974,7 @@
   max-height: 520px;
   opacity: 1;
   padding: 16px 14px 14px;
+  overflow-y: auto;
 }
 
 .search-shell.conversation-mode .chatbar.visible {
@@ -1132,17 +1133,14 @@
 }
 
 /* Phase Labels */
-.phase-web .phase-label {
+.phase-label.web,
+.phase-label.thinking,
+.phase-label.responding {
   color: #6ef0b9;
 }
 
-/* Cyan/teal per user pref */
-.phase-thinking .phase-label {
-  color: #6ef0b9;
-}
-
-.phase-responding .phase-label {
-  color: #6ef0b9;
+.phase-label {
+  color: var(--accent-white);
 }
 
 /* Pulse speed variations based on phase */
@@ -3059,6 +3057,24 @@
 
 .profile-menu-signout:hover .profile-menu-icon {
   color: #ff8585;
+}
+
+/* Credits badge in profile menu */
+.profile-credits-badge {
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #111418;
+  background: linear-gradient(135deg, #ffd166, #ff7a18);
+  padding: 3px 9px;
+  border-radius: 999px;
+  line-height: 1;
+}
+
+[data-theme="light"] .profile-credits-badge {
+  background: linear-gradient(135deg, #ff7a18, #ffd166);
+  color: #fff;
 }
 
 /* Light theme overrides for profile */

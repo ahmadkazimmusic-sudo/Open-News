@@ -24,6 +24,7 @@ Open News is a premium, open-source AI search engine designed to transform how w
 | **🔍 Live Intelligence** | Integrates real-time data from trusted global sources (Reuters, BBC, Al Jazeera, Bloomberg, etc.) via the Tavily Search API. |
 | **📰 Structured Briefs** | Generates comprehensive news reports with Background, Key Developments, Analysis, and Outlook sections. |
 | **⚡ Breaking News Feed** | Dedicated live feed page that auto-refreshes every 5 minutes with the latest headlines from top-tier outlets. |
+| **🪙 Daily Credit Allowance** | 100 AI search credits per day, displayed in the account menu to help track and manage usage. |
 | **📊 Data Visualizations** | Automatically renders interactive charts (via Recharts) for topics involving numerical data and distributions. |
 | **🎭 Bias & Sentiment Analysis** | Provides visual indicators for news sentiment and political bias ratings to help identify framing and perspective. |
 | **🌍 Polyglot Support** | Instant translation and reporting in English, Spanish, French, German, Japanese, and Arabic. |

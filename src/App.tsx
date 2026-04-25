@@ -6,6 +6,7 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
 import { toPng } from 'html-to-image'
 import { Camera } from 'lucide-react'
 import { useAuth } from './auth/useAuth'
+import { useCredits } from './auth/useCredits'
 import { AuthModal } from './components/AuthModal'
 import BreakingNews from './components/BreakingNews'
 import './App.css'
@@ -173,6 +174,7 @@ const makeSessionId = () => `sess-${Date.now()}`;
 
 function App() {
   const { user, signOut, loading } = useAuth()
+  const { credits, consume } = useCredits(user?.id)
 
   const [query, setQuery] = useState('')
   const [isFocused, setIsFocused] = useState(false)
@@ -302,6 +304,19 @@ function App() {
     const cleanQuery = (queryOverride || query).trim()
 
     if (!cleanQuery) {
+      return
+    }
+
+    if (!consume(1)) {
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          text: `## 🪙 Daily Limit Reached\n\nYou've used all **100 AI search credits** for today. Credits reset at midnight UTC. In the meantime, you can still browse the **Breaking News** feed for live headlines.`
+        }
+      ]);
+      setQuery('')
       return
     }
 
@@ -553,6 +568,20 @@ ${fullText}`;
                     <span className="profile-menu-name">{displayName}</span>
                     <span className="profile-menu-email">{user.email}</span>
                   </div>
+                </div>
+
+                <div className="profile-menu-divider" />
+
+                {/* Credits */}
+                <div className="profile-menu-item" role="menuitem" style={{ cursor: 'default' }}>
+                  <span className="profile-menu-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M12 6v12M9 10h6M9 14h6" strokeWidth="1.5" />
+                    </svg>
+                  </span>
+                  Credits
+                  <span className="profile-credits-badge">{credits}/100</span>
                 </div>
 
                 <div className="profile-menu-divider" />
