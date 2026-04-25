@@ -5,7 +5,7 @@ First off, thank you for considering contributing to Open News! It's people like
 ## How Can I Contribute?
 
 ### Reporting Bugs
--   Check the [issue tracker](https://github.com/ahmadkazimmusic-sudo/Open-News/issues) to see if the bug has already been reported.
+-   Check the [issue tracker](https://github.com/Dattebayoolo/Open-News/issues) to see if the bug has already been reported.
 -   If you find a new bug, please open a new issue. Include as much detail as possible: steps to reproduce, what you expected to see, and what you actually saw.
 
 ### Suggesting Enhancements

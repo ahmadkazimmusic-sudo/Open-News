@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/ahmadkazimmusic-sudo/Open-News/raw/main/public/preview.png" alt="Open News Interface Preview" width="850" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+  <img src="https://github.com/Dattebayoolo/Open-News/raw/main/public/preview.png" alt="Open News Interface Preview" width="850" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
 </p>
 
 <h1 align="center">🌐 Open News</h1>
@@ -50,7 +50,7 @@ Open News is a premium, open-source AI search engine designed to transform how w
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/ahmadkazimmusic-sudo/Open-News.git
+git clone https://github.com/Dattebayoolo/Open-News.git
 cd Open-News
 
 # 2. Install dependencies
@@ -70,6 +70,13 @@ npm run dev
 | :--- | :--- | :--- |
 | `VITE_OPENROUTER_API_KEY` | OpenRouter API key for LLM access (uses the `openrouter/free` endpoint by default). | [OpenRouter Keys](https://openrouter.ai/keys) |
 | `VITE_TAVILY_API_KEY` | API Key for web search capabilities. | [Tavily Dashboard](https://tavily.com/) |
+
+### ⚠️ API Key Security
+
+- **Never commit your `.env` file.** It is already listed in `.gitignore` by default.
+- **Rotate keys regularly.** If you suspect a key has been exposed, revoke it immediately from the provider dashboard and generate a new one.
+- **Avoid hardcoding keys** in source files, test scripts, or client-side bundles outside of Vite's `import.meta.env` pattern.
+- **`test-openrouter.js`** is a standalone development/testing script that contains a hardcoded key example. It is **excluded from production** (ignored in `.gitignore` and removed from Git tracking). Do not use it in deployed environments.
 
 ## 🤝 Contributing
 
