@@ -37,6 +37,7 @@ interface ChatMessage {
   sentiment?: number
   bias?: string
   chartData?: ChartData
+  limitReached?: boolean
 }
 
 interface TavilyResult {
@@ -128,6 +129,20 @@ const BreakingNewsIcon = () => (
     <path d="M7 9H17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     <path d="M7 13H14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     <circle cx="17.5" cy="16" r="1.5" fill="#ff4d4d" stroke="none" />
+  </svg>
+)
+
+const LimitReachedIcon = ({ size = 48 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="9" stroke="url(#limit-grad)" strokeWidth="2" />
+    <circle cx="12" cy="12" r="5" stroke="url(#limit-grad)" strokeWidth="1.5" strokeDasharray="3 2" />
+    <line x1="6" y1="6" x2="18" y2="18" stroke="#ff7a18" strokeWidth="2" strokeLinecap="round" />
+    <defs>
+      <linearGradient id="limit-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#ff7a18" />
+        <stop offset="1" stopColor="#ff8ed7" />
+      </linearGradient>
+    </defs>
   </svg>
 )
 
@@ -308,12 +323,14 @@ function App() {
     }
 
     if (!consume(1)) {
+      const limitId = `assistant-${Date.now()}`
       setMessages((currentMessages) => [
         ...currentMessages,
         {
-          id: `assistant-${Date.now()}`,
+          id: limitId,
           role: 'assistant',
-          text: `## 🪙 Daily Limit Reached\n\nYou've used all **100 AI search credits** for today. Credits reset at midnight UTC. In the meantime, you can still browse the **Breaking News** feed for live headlines.`
+          limitReached: true,
+          text: `## Daily Limit Reached\n\nYou've used all your daily AI search credits.\n\n**Open News is currently in beta.** We're actively working to expand access — please tune in later for updates!`
         }
       ]);
       setQuery('')
@@ -338,6 +355,10 @@ function App() {
         const result = await fetchWebContext(cleanQuery);
         webContext = result.contextBlock;
         sources = result.sources;
+        // Consume credits for each article fetched via Tavily
+        if (sources.length > 0) {
+          consume(sources.length);
+        }
       } catch (e) {
         console.warn('Tavily search failed, proceeding without web context:', e);
       }
@@ -722,7 +743,7 @@ ${fullText}`;
       </aside>
 
       {page === 'breaking-news' ? (
-        <BreakingNews />
+        <BreakingNews consume={consume} />
       ) : (
         <section className={searchShellClassName}>
           <form className="search-form" onSubmit={runSearch}>
@@ -770,6 +791,11 @@ ${fullText}`;
                       >
                         {copiedId === message.id ? '✓' : '⧉'}
                       </button>
+                    </div>
+                  )}
+                  {message.limitReached && (
+                    <div className="limit-icon" style={{ marginBottom: 12 }}>
+                      <LimitReachedIcon size={48} />
                     </div>
                   )}
                   <ReactMarkdown>{message.text}</ReactMarkdown>

@@ -41,7 +41,11 @@ async function fetchBreakingNews(): Promise<NewsItem[]> {
     })
 }
 
-export default function BreakingNews() {
+interface BreakingNewsProps {
+    consume: (amount?: number) => boolean
+}
+
+export default function BreakingNews({ consume }: BreakingNewsProps) {
     const [items, setItems] = useState<NewsItem[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -52,6 +56,14 @@ export default function BreakingNews() {
         setError(null)
         try {
             const news = await fetchBreakingNews()
+            const cost = news.length
+
+            if (!consume(cost)) {
+                setError(`Daily credit limit reached. Breaking news requires ${cost} credits. Open News is currently in beta — please tune in later for updates!`)
+                setLoading(false)
+                return
+            }
+
             setItems(news)
             setLastUpdated(new Date())
         } catch (e) {
@@ -105,7 +117,18 @@ export default function BreakingNews() {
         return (
             <div className="bn-page">
                 <div className="bn-error">
-                    <span>Unable to load breaking news.</span>
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginBottom: 12 }}>
+                        <circle cx="12" cy="12" r="9" stroke="url(#bn-limit-grad)" strokeWidth="2" />
+                        <circle cx="12" cy="12" r="5" stroke="url(#bn-limit-grad)" strokeWidth="1.5" strokeDasharray="3 2" />
+                        <line x1="6" y1="6" x2="18" y2="18" stroke="#ff7a18" strokeWidth="2" strokeLinecap="round" />
+                        <defs>
+                            <linearGradient id="bn-limit-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                                <stop stopColor="#ff7a18" />
+                                <stop offset="1" stopColor="#ff8ed7" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <span>{error}</span>
                     <button onClick={load}>Retry</button>
                 </div>
             </div>
