@@ -37,12 +37,13 @@ export function useCredits(userId: string | undefined) {
     // Sync on mount & when userId changes
     useEffect(() => {
         if (!userId) {
-            setCredits(DAILY_LIMIT)
-            return
+            const t = setTimeout(() => setCredits(DAILY_LIMIT), 0)
+            return () => clearTimeout(t)
         }
         const state = getInitialState(userId)
-        setCredits(state.remaining)
+        const t = setTimeout(() => setCredits(state.remaining), 0)
         localStorage.setItem(getStorageKey(userId), JSON.stringify(state))
+        return () => clearTimeout(t)
     }, [userId])
 
     const consume = useCallback((amount = 1): boolean => {

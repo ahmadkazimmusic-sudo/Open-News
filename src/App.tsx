@@ -50,6 +50,8 @@ interface TavilyResult {
   content: string
 }
 
+type OpenRouterStreamChunk = { choices?: Array<{ delta?: { content?: string } }> }
+
 interface HistorySession {
   id: string;
   title: string;
@@ -462,7 +464,7 @@ Response style:
       const stream = await openrouterClient.chat.completions.create({
         model: OPENROUTER_MODEL,
         max_tokens: 2048,
-        stream: true,
+        stream: true as const,
         messages: [
           { role: 'system', content: systemPrompt },
           ...newMessages.map(msg => ({
@@ -470,15 +472,16 @@ Response style:
             content: msg.text
           }))
         ],
-      } as Parameters<typeof openrouterClient.chat.completions.create>[0]) as AsyncIterable<any>;
+      } as Parameters<typeof openrouterClient.chat.completions.create>[0])
+      const typedStream = stream as unknown as AsyncIterable<OpenRouterStreamChunk>
 
       let fullText = '';
       setStreamingSources(sources);
 
       let streamError = false;
       try {
-        for await (const chunk of stream) {
-          const contentDelta = chunk.choices[0]?.delta?.content || '';
+        for await (const chunk of typedStream) {
+          const contentDelta = chunk.choices?.[0]?.delta?.content || '';
           if (contentDelta) {
             fullText += contentDelta;
             setStreamingText(fullText);
@@ -535,9 +538,12 @@ Follow-up eligibility:
           model: OPENROUTER_MODEL,
           max_tokens: 350,
           messages: [{ role: 'user', content: metadataPrompt }],
-        } as any);
+          stream: false as const,
+        } as Parameters<typeof openrouterClient.chat.completions.create>[0]);
 
-        const jsonContent = metaCompletion.choices[0]?.message?.content || '{}';
+        const jsonContent =
+          (metaCompletion as unknown as { choices?: Array<{ message?: { content?: string } }> })
+            .choices?.[0]?.message?.content || '{}';
         const match = jsonContent.match(/\{[\s\S]*\}/); // extract json object
         const meta = JSON.parse(match ? match[0] : jsonContent);
 

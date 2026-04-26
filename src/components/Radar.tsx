@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import RadarCard from './RadarCard'
 
 interface NewsItem {
@@ -109,7 +109,7 @@ export default function Radar({ consume, credits, limit }: RadarProps) {
     localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(presets))
   }, [presets])
 
-  const load = async (activeTopics: string[] = topics) => {
+  const load = useCallback(async (activeTopics: string[] = topics) => {
     if (activeTopics.length === 0) {
       setItems([])
       setError('Add at least one topic to build your radar.')
@@ -135,13 +135,13 @@ export default function Radar({ consume, credits, limit }: RadarProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [consume, topics])
 
   useEffect(() => {
-    load()
+    const t = setTimeout(() => { void load() }, 0)
     const interval = setInterval(() => load(), 5 * 60 * 1000)
-    return () => clearInterval(interval)
-  }, [])
+    return () => { clearTimeout(t); clearInterval(interval) }
+  }, [load])
 
   const timeAgo = (dateStr?: string) => {
     if (!dateStr) return ''

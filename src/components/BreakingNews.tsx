@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 interface NewsItem {
     title: string
@@ -57,7 +57,7 @@ export default function BreakingNews({ consume }: BreakingNewsProps) {
     const [error, setError] = useState<string | null>(null)
     const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
 
-    const load = async () => {
+    const load = useCallback(async () => {
         setLoading(true)
         setError(null)
         try {
@@ -77,13 +77,13 @@ export default function BreakingNews({ consume }: BreakingNewsProps) {
         } finally {
             setLoading(false)
         }
-    }
+    }, [consume])
 
     useEffect(() => {
-        load()
+        const t = setTimeout(() => { void load() }, 0)
         const interval = setInterval(load, 5 * 60 * 1000) // refresh every 5 min
-        return () => clearInterval(interval)
-    }, [])
+        return () => { clearTimeout(t); clearInterval(interval) }
+    }, [load])
 
     const timeAgo = (dateStr?: string) => {
         if (!dateStr) return ''

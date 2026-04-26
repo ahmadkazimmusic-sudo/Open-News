@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { MapContainer, TileLayer, CircleMarker, Tooltip, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -96,7 +96,7 @@ export default function HeatMap({ consume, credits, limit }: HeatMapProps) {
   const [selectedRegion, setSelectedRegion] = useState<string>('europe')
   const [lastRefreshCost, setLastRefreshCost] = useState(0)
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
@@ -110,18 +110,35 @@ export default function HeatMap({ consume, credits, limit }: HeatMapProps) {
       setLastRefreshCost(cost)
       setItems(news)
       setLastUpdated(new Date())
+
+      // Pick most active region based on this refresh
+      const counts = new Map<string, number>()
+      for (const item of news) {
+        const r = classifyRegion(item)
+        counts.set(r, (counts.get(r) || 0) + 1)
+      }
+      let topId = selectedRegion
+      let topCount = -1
+      for (const region of REGION_CONFIGS) {
+        const c = counts.get(region.id) || 0
+        if (c > topCount) {
+          topCount = c
+          topId = region.id
+        }
+      }
+      setSelectedRegion(topId)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Unknown error')
     } finally {
       setLoading(false)
     }
-  }
+  }, [consume, selectedRegion])
 
   useEffect(() => {
-    load()
+    const t = setTimeout(() => { void load() }, 0)
     const interval = setInterval(load, 5 * 60 * 1000)
-    return () => clearInterval(interval)
-  }, [])
+    return () => { clearTimeout(t); clearInterval(interval) }
+  }, [load])
 
   const byRegion = useMemo(() => {
     const grouped: Record<string, NewsItem[]> = {}
@@ -140,14 +157,6 @@ export default function HeatMap({ consume, credits, limit }: HeatMapProps) {
       }
     })
   }, [byRegion])
-
-  useEffect(() => {
-    if (hotspotData.length === 0) return
-    const top = hotspotData.reduce((a, b) => (b.score > a.score ? b : a), hotspotData[0])
-    setSelectedRegion(top.id)
-  }, [items.length])
-
-  const selected = hotspotData.find((h) => h.id === selectedRegion) || hotspotData[0]
   const projectedCost = Math.max(1, items.length || 8)
   const hasEnoughCredits = credits >= projectedCost
   const isCreditError = Boolean(error && error.toLowerCase().includes('credit'))
