@@ -12,6 +12,7 @@ import BreakingNews from './components/BreakingNews'
 import Developing from './components/Developing'
 import Radar from './components/Radar'
 import AccountSettings from './components/AccountSettings'
+import HeatMap from './components/HeatMap'
 import './App.css'
 
 const openrouterClient = new OpenAI({
@@ -176,6 +177,13 @@ const RadarIcon = () => (
   </svg>
 )
 
+const HeatMapIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3 7L9 4L15 7L21 4V17L15 20L9 17L3 20V7Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    <circle cx="15" cy="11" r="1.6" fill="currentColor" />
+  </svg>
+)
+
 const LimitReachedIcon = ({ size = 48 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <circle cx="12" cy="12" r="9" stroke="url(#limit-grad)" strokeWidth="2" />
@@ -263,7 +271,10 @@ function App() {
   const [profileOpen, setProfileOpen] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
 
-  const [page, setPage] = useState<'ai-mode' | 'breaking-news' | 'developing' | 'radar' | 'account-settings'>('ai-mode')
+  const [page, setPage] = useState<'ai-mode' | 'breaking-news' | 'developing' | 'radar' | 'heat-map' | 'account-settings'>('ai-mode')
+  const [showV1Notice, setShowV1Notice] = useState<boolean>(() => {
+    return localStorage.getItem('open-news-v1-notice-dismissed') !== '1'
+  })
 
   const [streamingText, setStreamingText] = useState('')
   const [streamingSources, setStreamingSources] = useState<{ title: string, url: string }[] | null>(null)
@@ -346,6 +357,11 @@ function App() {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('open-news-theme', theme);
   }, [theme]);
+
+  const dismissV1Notice = () => {
+    setShowV1Notice(false)
+    localStorage.setItem('open-news-v1-notice-dismissed', '1')
+  }
 
   // Auto-scroll to bottom whenever messages update, streaming text changes, or loading starts
   useEffect(() => {
@@ -581,6 +597,33 @@ Follow-up eligibility:
 
   return (
     <main className={shellClassName}>
+      {page === 'ai-mode' && showV1Notice && (
+        <section className="v1-notice" role="status" aria-live="polite">
+          <div className="v1-notice-mascot" aria-hidden="true">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="9" stroke="url(#v1-grad)" strokeWidth="1.8" />
+              <circle cx="9.2" cy="10" r="1.2" fill="currentColor" />
+              <circle cx="14.8" cy="10" r="1.2" fill="currentColor" />
+              <path d="M8.5 14C9.2 15.3 10.4 16 12 16C13.6 16 14.8 15.3 15.5 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M6.5 6.8L8 8.2M17.5 6.8L16 8.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <defs>
+                <linearGradient id="v1-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#ff7a18" />
+                  <stop offset="1" stopColor="#ff8ed7" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div className="v1-notice-copy">
+            <strong>V1 testing phase is now open</strong>
+            <span>Open News is actively evolving. Expect rapid updates and occasional rough edges.</span>
+          </div>
+          <button className="v1-notice-close" onClick={dismissV1Notice} aria-label="Dismiss V1 testing notice">
+            ×
+          </button>
+        </section>
+      )}
+
       {/* Navbar */}
       <nav className="app-nav">
         <div className="nav-items">
@@ -623,6 +666,16 @@ Follow-up eligibility:
               <RadarIcon />
             </span>
             Radar
+          </button>
+          <button
+            className={`nav-item${page === 'heat-map' ? ' active' : ''}`}
+            aria-current={page === 'heat-map' ? 'page' : undefined}
+            onClick={() => setPage('heat-map')}
+          >
+            <span className="nav-icon">
+              <HeatMapIcon />
+            </span>
+            Heat Map
           </button>
         </div>
       </nav>
@@ -844,6 +897,10 @@ Follow-up eligibility:
       ) : page === 'radar' ? (
         <section className="feed-shell">
           <Radar consume={consume} credits={credits} limit={limit} />
+        </section>
+      ) : page === 'heat-map' ? (
+        <section className="feed-shell">
+          <HeatMap consume={consume} credits={credits} limit={limit} />
         </section>
       ) : page === 'account-settings' ? (
         <section className="feed-shell">
