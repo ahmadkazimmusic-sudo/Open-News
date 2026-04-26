@@ -10,6 +10,8 @@ import { useCredits } from './auth/useCredits'
 import { AuthModal } from './components/AuthModal'
 import BreakingNews from './components/BreakingNews'
 import Developing from './components/Developing'
+import Radar from './components/Radar'
+import AccountSettings from './components/AccountSettings'
 import './App.css'
 
 const openrouterClient = new OpenAI({
@@ -52,6 +54,30 @@ interface HistorySession {
   title: string;
   updatedAt: number;
   messages: ChatMessage[];
+}
+
+function isNewsQuery(query: string): boolean {
+  const q = query.toLowerCase()
+  const newsTerms = [
+    'news', 'headline', 'headlines', 'breaking', 'developing', 'update', 'updates',
+    'today', 'latest', 'report', 'reported', 'reuters', 'bbc', 'ap', 'bloomberg',
+    'economy', 'market', 'stocks', 'policy', 'election', 'war', 'conflict', 'geopolitics',
+    'government', 'minister', 'president', 'country', 'inflation', 'oil', 'crypto'
+  ]
+
+  return newsTerms.some((term) => q.includes(term))
+}
+
+function isChartQuery(query: string, responseText: string): boolean {
+  const q = query.toLowerCase()
+  const chartIntentTerms = [
+    'chart', 'compare', 'comparison', 'trend', 'trends', 'percentage', 'percent',
+    'stats', 'statistics', 'numbers', 'data', 'distribution', 'market share',
+    'poll', 'index', 'growth', 'decline'
+  ]
+  const hasChartIntent = chartIntentTerms.some((term) => q.includes(term))
+  const hasQuantSignals = /\b\d+(\.\d+)?%|\b\d{2,}\b/.test(responseText)
+  return hasChartIntent && hasQuantSignals
 }
 
 async function fetchWebContext(query: string): Promise<{ contextBlock: string; sources: { title: string; url: string }[] }> {
@@ -142,6 +168,14 @@ const DevelopingIcon = () => (
   </svg>
 )
 
+const RadarIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.5" />
+    <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 2" />
+    <circle cx="12" cy="12" r="1.6" fill="currentColor" />
+  </svg>
+)
+
 const LimitReachedIcon = ({ size = 48 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <circle cx="12" cy="12" r="9" stroke="url(#limit-grad)" strokeWidth="2" />
@@ -199,7 +233,7 @@ const makeSessionId = () => `sess-${Date.now()}`;
 
 function App() {
   const { user, signOut, loading } = useAuth()
-  const { credits, consume } = useCredits(user?.id)
+  const { credits, consume, limit } = useCredits(user?.id)
 
   const [query, setQuery] = useState('')
   const [isFocused, setIsFocused] = useState(false)
@@ -229,7 +263,7 @@ function App() {
   const [profileOpen, setProfileOpen] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
 
-  const [page, setPage] = useState<'ai-mode' | 'breaking-news' | 'developing'>('ai-mode')
+  const [page, setPage] = useState<'ai-mode' | 'breaking-news' | 'developing' | 'radar' | 'account-settings'>('ai-mode')
 
   const [streamingText, setStreamingText] = useState('')
   const [streamingSources, setStreamingSources] = useState<{ title: string, url: string }[] | null>(null)
@@ -361,48 +395,49 @@ function App() {
       // Step 1: Fetch live web context from Tavily
       let webContext = '';
       let sources: { title: string; url: string }[] = [];
-      try {
-        const result = await fetchWebContext(cleanQuery);
-        webContext = result.contextBlock;
-        sources = result.sources;
-        // Consume credits for each article fetched via Tavily
-        if (sources.length > 0) {
-          consume(sources.length);
+      const shouldUseNewsSearch = isNewsQuery(cleanQuery);
+
+      if (shouldUseNewsSearch) {
+        try {
+          const result = await fetchWebContext(cleanQuery);
+          webContext = result.contextBlock;
+          sources = result.sources;
+          // Consume credits for each article fetched via Tavily
+          if (sources.length > 0) {
+            consume(sources.length);
+          }
+        } catch (e) {
+          console.warn('Tavily search failed, proceeding without web context:', e);
         }
-      } catch (e) {
-        console.warn('Tavily search failed, proceeding without web context:', e);
       }
 
       // Step 2: Think
       setLoadingPhase('thinking')
       const systemPrompt = webContext
-        ? `You are Open News, an expert AI journalist and news analyst powered by trusted global sources. Your job is to produce thorough, well-structured, long-form news briefs.
+        ? `You are Open News, an expert AI journalist and news analyst powered by trusted global sources.
         
 CRITICAL REQUIREMENT: Though your sources and internal reasoning may be in English, YOU MUST WRITE YOUR ENTIRE FINAL RESPONSE IN ${language.toUpperCase()}.
 
-Guidelines:
-- Always write AT LEAST 4–6 substantial paragraphs
-- Use markdown headers (##) to organize sections like Background, Key Developments, Analysis, Outlook
-- Use bullet points for lists of facts, figures, or named parties
-- Cite sources inline using [1], [2] etc. wherever relevant
-- Include context, history, and implications — not just surface-level facts
-- End with an "## Outlook" or "## What to Watch" section summarizing what comes next
+Response style:
+- Respond naturally and adapt structure to the user's query.
+- Use concise or detailed format as needed; do not force a fixed template.
+- Use markdown only when it helps readability.
+- When relevant, cite supporting sources inline using [1], [2], etc.
 
 Here is live web search context to help you answer accurately:
 
 ${webContext}
 
-Use ALL of the above sources to inform your response thoroughly.`
+Use the above sources to answer accurately and clearly.`
         : `You are Open News, an expert AI journalist and news analyst.
 
 CRITICAL REQUIREMENT: YOU MUST WRITE YOUR ENTIRE FINAL RESPONSE IN ${language.toUpperCase()}.
 
-Guidelines:
-- Always write AT LEAST 4–6 substantial paragraphs
-- Use markdown headers (##) to organize sections like Background, Key Developments, Analysis, Outlook
-- Use bullet points for lists of facts, figures, or named parties
-- Include context, history, and implications — not just surface-level facts
-- End with an "## Outlook" or "## What to Watch" section summarizing what comes next`;
+Response style:
+- Respond naturally and adapt structure to the user's query.
+- Use concise or detailed format as needed; do not force a fixed template.
+- Use markdown only when it helps readability.
+- If asked about your exact model identity, say Open News is routed through OpenRouter and model routing may vary by configuration.`;
 
       // Step 3: Respond via Streaming
       setLoadingPhase('responding')
@@ -455,6 +490,8 @@ Guidelines:
       if (streamError) return;
 
       // Step 4: Generate follow up questions & Metadata
+      const allowFollowUps = isNewsQuery(cleanQuery)
+      const allowChart = isChartQuery(cleanQuery, fullText)
       const metadataPrompt = `Based on the following news brief, analyze and return ONLY a single valid JSON object representing metadata. The JSON must have the following schema, and no other text:
 {
   "followUps": ["Q1", "Q2", "Q3"], // exactly 3 short follow-up questions
@@ -467,7 +504,15 @@ Guidelines:
 }
 
 Brief:
-${fullText}`;
+${fullText}
+
+Chart eligibility:
+- Chart allowed for this query: ${allowChart ? 'YES' : 'NO'}
+- If NO, you MUST return chartData as null.
+
+Follow-up eligibility:
+- Follow-ups allowed for this query: ${allowFollowUps ? 'YES' : 'NO'}
+- If NO, you MUST return followUps as an empty array.`;
 
       try {
         const metaCompletion = await openrouterClient.chat.completions.create({
@@ -483,10 +528,10 @@ ${fullText}`;
         setMessages(currentMessages => currentMessages.map(msg =>
           msg.id === assistantId ? {
             ...msg,
-            followUps: meta.followUps?.slice(0, 3) || [],
+            followUps: allowFollowUps ? (meta.followUps?.slice(0, 3) || []) : [],
             sentiment: meta.sentiment,
             bias: meta.bias,
-            chartData: meta.chartData
+            chartData: allowChart ? meta.chartData : undefined
           } : msg
         ));
       } catch (e) {
@@ -569,6 +614,16 @@ ${fullText}`;
             </span>
             Developing
           </button>
+          <button
+            className={`nav-item${page === 'radar' ? ' active' : ''}`}
+            aria-current={page === 'radar' ? 'page' : undefined}
+            onClick={() => setPage('radar')}
+          >
+            <span className="nav-icon">
+              <RadarIcon />
+            </span>
+            Radar
+          </button>
         </div>
       </nav>
 
@@ -610,6 +665,24 @@ ${fullText}`;
                     <span className="profile-menu-email">{user.email}</span>
                   </div>
                 </div>
+
+                <div className="profile-menu-divider" />
+
+                {/* Account settings */}
+                <button
+                  className="profile-menu-item"
+                  onClick={() => { setPage('account-settings'); setProfileOpen(false) }}
+                  role="menuitem"
+                  id="profile-account-settings-btn"
+                >
+                  <span className="profile-menu-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="3.2" />
+                      <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a1.9 1.9 0 0 1 0 2.7l-.1.1a1.9 1.9 0 0 1-2.7 0l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a1.9 1.9 0 0 1-1.9 1.9h-.4A1.9 1.9 0 0 1 11 20v-.1a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a1.9 1.9 0 0 1-2.7 0l-.1-.1a1.9 1.9 0 0 1 0-2.7l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H5.6A1.9 1.9 0 0 1 3.7 13v-.4A1.9 1.9 0 0 1 5.6 10h.1a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a1.9 1.9 0 0 1 0-2.7l.1-.1a1.9 1.9 0 0 1 2.7 0l.1.1a1 1 0 0 0 1.1.2h0a1 1 0 0 0 .6-.9V4.6A1.9 1.9 0 0 1 12.8 2.7h.4A1.9 1.9 0 0 1 15.1 4.6v.1a1 1 0 0 0 .6.9h0a1 1 0 0 0 1.1-.2l.1-.1a1.9 1.9 0 0 1 2.7 0l.1.1a1.9 1.9 0 0 1 0 2.7l-.1.1a1 1 0 0 0-.2 1.1v0a1 1 0 0 0 .9.6h.1a1.9 1.9 0 0 1 1.9 1.9v.4a1.9 1.9 0 0 1-1.9 1.9h-.1a1 1 0 0 0-.9.6Z" strokeWidth="1.2" />
+                    </svg>
+                  </span>
+                  Account Settings
+                </button>
 
                 <div className="profile-menu-divider" />
 
@@ -698,8 +771,6 @@ ${fullText}`;
                   History
                 </button>
 
-                <div className="profile-menu-divider" />
-
                 {/* Sign out */}
                 <button
                   className="profile-menu-item profile-menu-signout"
@@ -769,6 +840,17 @@ ${fullText}`;
       ) : page === 'developing' ? (
         <section className="feed-shell">
           <Developing consume={consume} />
+        </section>
+      ) : page === 'radar' ? (
+        <section className="feed-shell">
+          <Radar consume={consume} credits={credits} limit={limit} />
+        </section>
+      ) : page === 'account-settings' ? (
+        <section className="feed-shell">
+          <AccountSettings
+            email={user.email || 'No email'}
+            displayName={displayName}
+          />
         </section>
       ) : (
         <section className={searchShellClassName}>
