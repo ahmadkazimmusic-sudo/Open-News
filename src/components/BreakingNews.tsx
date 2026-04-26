@@ -45,6 +45,12 @@ interface BreakingNewsProps {
     consume: (amount?: number) => boolean
 }
 
+const BreakingTagIcon = () => (
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M12 3L14.6 9.4L21 12L14.6 14.6L12 21L9.4 14.6L3 12L9.4 9.4L12 3Z" fill="currentColor" />
+    </svg>
+)
+
 export default function BreakingNews({ consume }: BreakingNewsProps) {
     const [items, setItems] = useState<NewsItem[]>([])
     const [loading, setLoading] = useState(true)
@@ -166,6 +172,10 @@ export default function BreakingNews({ consume }: BreakingNewsProps) {
                         className="bn-card"
                     >
                         <div className="bn-card-meta">
+                            <span className="bn-card-tag">
+                                <BreakingTagIcon />
+                                Breaking
+                            </span>
                             <span className="bn-card-source">{item.source}</span>
                             {item.published && (
                                 <span className="bn-card-time">{timeAgo(item.published)}</span>

@@ -763,9 +763,13 @@ ${fullText}`;
       </aside>
 
       {page === 'breaking-news' ? (
-        <BreakingNews consume={consume} />
+        <section className="feed-shell">
+          <BreakingNews consume={consume} />
+        </section>
       ) : page === 'developing' ? (
-        <Developing consume={consume} />
+        <section className="feed-shell">
+          <Developing consume={consume} />
+        </section>
       ) : (
         <section className={searchShellClassName}>
           <form className="search-form" onSubmit={runSearch}>

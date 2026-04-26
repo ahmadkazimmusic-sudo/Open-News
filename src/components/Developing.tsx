@@ -170,7 +170,6 @@ export default function Developing({ consume }: DevelopingProps) {
                         </div>
                         <div className="dev-card-body">
                             <div className="dev-card-meta">
-                                <span className="dev-card-source">{item.source}</span>
                                 <span className="dev-card-tag">
                                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <circle cx="12" cy="12" r="3" fill="#ff4d4d" />
@@ -179,6 +178,7 @@ export default function Developing({ consume }: DevelopingProps) {
                                     </svg>
                                     Developing
                                 </span>
+                                <span className="dev-card-source">{item.source}</span>
                                 {item.published && (
                                     <span className="dev-card-time">{timeAgo(item.published)}</span>
                                 )}

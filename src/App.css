@@ -7,6 +7,7 @@
   align-content: center;
   justify-items: center;
   gap: 30px;
+  overflow-x: hidden;
   transition:
     padding 0.32s ease,
     gap 0.32s ease;
@@ -274,10 +275,26 @@
 
 /* ── Breaking News Page ────────────────────────── */
 .bn-page {
-  width: min(760px, 100%);
+  width: 100%;
+  margin: 0;
+  justify-self: stretch;
+  align-self: stretch;
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.feed-shell {
+  width: 100%;
+  max-width: 760px;
+  margin-inline: auto;
+  justify-self: center;
+  align-self: start;
+  direction: ltr;
+}
+
+.app-shell.conversation-mode .bn-page {
+  width: 100%;
 }
 
 .bn-loader {
@@ -448,6 +465,27 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
+}
+
+.bn-card-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ff4d4d;
+  background: rgba(255, 77, 77, 0.08);
+  border: 1px solid rgba(255, 77, 77, 0.2);
+  border-radius: 999px;
+  padding: 3px 9px;
+  line-height: 1;
+}
+
+.bn-card-tag svg {
+  animation: dev-pulse 2.5s ease-in-out infinite;
 }
 
 .bn-card-source {
@@ -498,12 +536,14 @@
 
 /* ── Developing list (horizontal card rows) ─────── */
 .dev-list {
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
 .dev-card {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -716,6 +756,12 @@
 
 [data-theme="light"] .bn-card-source {
   color: #e75c00;
+}
+
+[data-theme="light"] .bn-card-tag {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.2);
 }
 
 [data-theme="light"] .bn-card-title {
