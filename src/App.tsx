@@ -439,9 +439,9 @@ function App() {
     return saved || 'dark';
   })
   const [language, setLanguage] = useState('English')
-  const [sourceFilter, setSourceFilter] = useState<SourceFilter>('All Trusted')
-  const [recencyFilter, setRecencyFilter] = useState<RecencyFilter>('Latest')
-  const [regionFilter, setRegionFilter] = useState<RegionFilter>('Global')
+  const [sourceFilter] = useState<SourceFilter>('All Trusted')
+  const [recencyFilter] = useState<RecencyFilter>('Latest')
+  const [regionFilter] = useState<RegionFilter>('Global')
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [sessionId, setSessionId] = useState<string>(makeSessionId)
   const [history, setHistory] = useState<HistorySession[]>(() => {
